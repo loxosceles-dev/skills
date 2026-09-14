@@ -1,0 +1,47 @@
+{
+  "name": "skills",
+  "version": "1.0.0",
+  "description": "Universal coding and project-setup skills, agents, and hooks for all development projects.",
+  "author": {
+    "name": "loxosceles-dev"
+  },
+  "license": "MIT",
+  "agents": [
+    "./.apm/agents/lead-dev.agent.md",
+    "./.apm/agents/code-reviewer.agent.md",
+    "./.apm/agents/critic.agent.md",
+    "./.apm/agents/planner.agent.md"
+  ],
+  "skills": [
+    "./skills/branch-policy",
+    "./skills/cdk-bootstrap-configuration",
+    "./skills/centralized-eslint-prettier",
+    "./skills/cli-architecture-pattern",
+    "./skills/command-execution",
+    "./skills/component-organization",
+    "./skills/core-principles",
+    "./skills/critic-dialogue",
+    "./skills/environment-deployment-strategy",
+    "./skills/environment-validation",
+    "./skills/frontend-code-quality",
+    "./skills/git-commits",
+    "./skills/github-actions-oidc-aws",
+    "./skills/implementation-planning",
+    "./skills/javascript-function-style",
+    "./skills/lambda-handler-pattern",
+    "./skills/link-based-auth",
+    "./skills/mcp-server-setup",
+    "./skills/mise-project-isolation",
+    "./skills/pr-fixer",
+    "./skills/pr-reviewer",
+    "./skills/pre-commit-check",
+    "./skills/publish-html-report",
+    "./skills/receiving-code-review",
+    "./skills/resource-naming",
+    "./skills/security-checklist",
+    "./skills/setup-pre-commit",
+    "./skills/skill-writing",
+    "./skills/ssm-runtime-configuration",
+    "./skills/static-frontend-hosting"
+  ]
+}
