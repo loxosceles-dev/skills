@@ -12,4 +12,4 @@
 
 **Fix:** Added explicit Fix vs. defer decision section with criteria for each case. Added mandatory reply rule: every comment must receive an inline reply with either a commit hash or a tracked issue link, otherwise it is treated as completely unaddressed. Updated triage step to require a decision+rationale per item, not just a description.
 
-**Verified:** Pushed to dev-skills main (8dd648d).
+**Verified:** Pushed to main.
