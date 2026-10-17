@@ -14,11 +14,15 @@ Guidelines for AI agents when executing commands and running scripts.
 
 ## Core Rules
 
-### 1. Never Run Project Tools on the Host Machine
+### 1. Respect the Project's Declared Execution Environment
 
-**The host machine stays pristine.** All project tools (pnpm, npm, python, pip, pytest, cargo, etc.) live inside devcontainers. Never install packages, run builds, or execute project commands directly on the host.
+Read the project's `AGENTS.md`, setup/architecture decisions, toolchain files and root scripts before running tools. The project's authorized setup decides where commands execute:
 
-**If you need to run something in a project, use the devcontainer:**
+- **Container-managed project:** run its package, build and test commands inside its existing devcontainer. Do not install its dependencies on the host.
+- **Host-native project:** use its declared isolated toolchain (for example mise plus a project-local `.venv` or `node_modules`). Run its root scripts on the host; do not install project packages globally.
+- **Unclear or conflicting setup:** stop and ask. Do not migrate execution modes or remove a devcontainer as a side effect of running a command.
+
+For a container-managed project:
 
 ```bash
 # ✅ Correct: execute inside the container
@@ -26,20 +30,20 @@ docker exec -it <container_name> pnpm install
 docker exec -it <container_name> pnpm build
 docker exec -it <container_name> pytest
 
-# ❌ NEVER: run project tools on the host
-pnpm install          # installs to host, pollutes system
-pip install requests  # modifies host Python
-npm run build         # uses host Node version, may differ from container
+# ❌ Wrong for that container-managed project
+pnpm install          # bypasses its declared container environment
+pip install requests  # may modify an unrelated host Python
+npm run build         # may use the wrong host Node version
 ```
 
-**Exceptions** (tools that are OK on the host):
+**Host administration is a separate scope.** These tools may run on the host when authorized:
 - `git` — version control is host-level
 - `docker` / `docker compose` — managing containers
 - `gh` — GitHub CLI for repo operations
-- `npx skills` — skill installation (doesn't modify project deps)
+- `chezmoi`, `uv`/`uvx`, APM and credential tooling — host configuration and skill administration, not product dependency installation
 - File operations (`cat`, `ls`, `grep`, `find`, etc.)
 
-**When working across multiple projects from outside containers**, limit yourself to reading files, git operations, and docker commands. If you need to build/test/install, exec into the container.
+**Cross-project work does not authorize project execution or migration.** Inspect each project's current state and permissions first. Projects own their refreshes; host boot/login automation must not update them.
 
 ### 2. Use Project's Developer API
 
