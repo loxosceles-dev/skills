@@ -12,6 +12,8 @@ type: pattern
 
 **Solution**: `mise` activates per-project tool versions automatically on `cd`. One `.mise.toml` per project replaces the need for nvm, pyenv, fnm, rbenv, and asdf individually.
 
+Use this pattern when the project's declared setup is host-native. Preserve an existing container workflow unless the owner explicitly approves a mode change; this pattern does not authorize removing containers or running container-managed project tools on the host.
+
 ---
 
 ## Pattern
@@ -106,8 +108,9 @@ mise install
 mise trust && mise install   # 1. runtime
 uv sync                      # 2. python deps (if Python project)
 pnpm install                 # 3. node deps (if Node project)
-apm install --frozen         # 4. agent skills
-direnv allow                 # 5. env vars (if .envrc exists)
+apm update --yes             # 4. resolve latest agent skills
+apm install --force          # 5. deploy skills and agents
+direnv allow                 # 6. env vars (if .envrc exists)
 ```
 
 ---
