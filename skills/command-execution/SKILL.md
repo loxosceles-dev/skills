@@ -73,7 +73,24 @@ execute_bash(command="pnpm synth", working_dir="infrastructure")
 
 **Why**: `cd` doesn't persist. Use root scripts or `working_dir` parameter.
 
-### 3. Discover Scripts First
+### 3. Environment Convention
+
+`.envrc` sets `ENVIRONMENT=local` for local dev server detection. Infrastructure commands targeting AWS use explicit `:dev` or `:prod` suffixes in root scripts, which set `ENVIRONMENT=dev` or `ENVIRONMENT=prod` respectively.
+
+```bash
+# ✅ Correct — suffix determines the target environment
+pnpm deploy:dev
+pnpm ses-template:prod
+pnpm ssm-upload:dev
+
+# ❌ Wrong — never rely on .envrc ENVIRONMENT for infra commands
+pnpm deploy          # would use ENVIRONMENT=local, which is wrong
+ENVIRONMENT=dev pnpm --filter=infrastructure run deploy  # bypasses root API
+```
+
+**Root scripts are idempotent**: if an operation can be both "create" and "update" (like SES templates), the script handles both — no separate `:deploy` / `:update` variants.
+
+### 4. Discover Scripts First
 
 ```bash
 # Check available scripts
