@@ -1,6 +1,6 @@
 ---
 name: publish-html-report
-description: Publish self-contained HTML visualizations (diagrams, architecture reviews, analysis reports) viewable directly on GitHub via gist + htmlpreview. Use when the user wants to visualize something rich that markdown can't handle — architecture diagrams, dependency graphs, before/after comparisons, performance reports.
+description: Generate self-contained HTML reports for local viewing or publish them via gist + htmlpreview. Use when the user asks for a temporary HTML document, an HTML report, or a rich visualization such as an architecture diagram, dependency graph, or before/after comparison.
 type: pattern
 ---
 
@@ -35,23 +35,29 @@ Generate HTML → Write to docs/  → Push to branch
 
 Every report is a single self-contained file — no external assets beyond CDNs:
 
+**Dark scheme:** Always render HTML documents and reports in a dark scheme, independently of the operating system theme. Set `color-scheme: dark`, use dark page and content backgrounds, and maintain high-contrast text, links and diagrams. Apply this preference in the shared tool rather than adding it to project `AGENTS.md` files. Preserve the source content when changing its presentation.
+
+For a temporary or local-only document, save it in the requested temporary directory and open it locally. Publishing is a separate step performed when requested.
+
 ```html
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>:root { color-scheme: dark; }</style>
     <title>{{Report Title}}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+      mermaid.initialize({ startOnLoad: true, theme: "dark", securityLevel: "loose" });
     </script>
   </head>
-  <body class="bg-stone-50 text-slate-900 font-sans">
+  <body class="bg-slate-950 text-slate-100 font-sans">
     <main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
       <header>
         <h1 class="text-3xl font-bold">{{Title}}</h1>
-        <p class="text-sm text-slate-500">{{date}} · {{repo-name}}</p>
+        <p class="text-sm text-slate-300">{{date}} · {{repo-name}}</p>
       </header>
       <!-- Content sections -->
     </main>
@@ -72,7 +78,7 @@ Mix these — don't make every diagram look the same:
 
 **Mermaid** — for graph-shaped relationships (call flows, dependencies, sequences):
 ```html
-<div class="rounded-lg border border-slate-200 bg-white p-4">
+<div class="rounded-lg border border-slate-600 bg-slate-900 p-4">
   <pre class="mermaid">
     flowchart LR
       A[Module] --> B[Dependency]
