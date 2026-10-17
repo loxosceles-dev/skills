@@ -1,30 +1,35 @@
 ---
 name: branch-policy
-description: Branch model and merge flow for this project. Feature branches merge to dev via PR, dev merges to main via PR. Use when creating branches, opening PRs, pushing code, committing, or starting any new work — prevents incorrect base branch selection and direct pushes.
+description: Branch model and merge flow for coding projects. Features merge to dev via PR, dev to main via PR; standalone setup and documentation go directly to dev. Use when branching, committing, pushing, or opening PRs, subject to the repository's actual workflow and explicit user restrictions.
 ---
 
 # Branch Policy
+
+Repository-specific workflow and explicit user restrictions take precedence over
+this default coding-project model. Inspect the actual branches and working-tree
+state first. Main-only infrastructure repositories may use a direct-main workflow
+when authorized; do not invent a dev branch or transplant a production-release
+process into a repository that does not use it.
 
 ## Branch Model
 
 ```
 main        ← production. Updated ONLY by PR from dev. Never push directly.
-dev         ← integration branch. Updated ONLY by PR from feature branches.
+dev         ← integration branch. Feature PRs plus standalone setup/docs commits.
 feat/*      ← feature work, branched FROM dev
 fix/*       ← bug fixes, branched FROM dev
 chore/*     ← maintenance, branched FROM dev
 ```
 
-## The #1 Rule: Always Create a Branch First
+## Branch Features; Standalone Setup and Docs Go to Dev
 
-**Before writing ANY code — even a one-line fix — create a feature/fix/chore branch from dev.**
+**Feature work, bug fixes, and refactors start on a branch from dev.**
 
-Do NOT:
-- Start coding on `dev` and "move it to a branch later"
-- Push a "quick fix" directly to `dev`
-- Assume small changes don't need a branch
+Project setup and documentation belong with their related feature branch, or go
+directly to dev when done separately. A small feature fix is still feature work;
+size alone does not turn it into setup. Existing work stays on its current branch.
 
-If you're on `dev` and about to make changes, STOP and run:
+If you're on `dev` and starting feature work, create the feature branch first:
 ```bash
 git checkout -b feat/descriptive-name dev
 ```
@@ -42,7 +47,7 @@ A new branch is only needed when starting **genuinely new, unrelated work**.
 
 ## Flow
 
-1. `git checkout -b feat/thing dev` — create branch BEFORE any code changes
+1. `git checkout -b feat/thing dev` — create branch BEFORE feature code changes
 2. Make commits on the feature branch
 3. Push feature branch, open PR **to dev** (never to main)
 4. Address review feedback on the same branch, push again
@@ -54,10 +59,13 @@ A new branch is only needed when starting **genuinely new, unrelated work**.
 | Action | Allowed? |
 |---|---|
 | Push to feature branch | ✅ Always |
-| Push to `dev` | ❌ Only if user explicitly says "push to dev" |
+| Push to `dev` | ✅ For authorized standalone setup/docs; otherwise only with explicit user permission. |
 | Push to `main` | ❌ Never. Main is updated only by merging a PR. |
 
-If the user says "commit this" or "let's commit" while on `dev`, do NOT push. Ask: "Should I create a feature branch for this?"
+Classify the change before acting: feature/fix work needs a branch; standalone
+setup/docs can stay on dev. Commit and push only within the user's authorization.
+If branch or dirty-state restrictions block publication, leave the changes local
+and report the blocker; never move or discard unrelated work to qualify for push.
 
 ## PR Base Branch
 
@@ -72,8 +80,8 @@ If you're about to create a PR with `--base main` from a feature branch, **STOP*
 
 ## Common Mistakes to Avoid
 
-1. **Starting work without a branch** — Always check `git branch --show-current` before coding. If it says `dev`, create a branch first.
-2. **Pushing "small fixes" to dev** — No fix is small enough to skip the branch+PR flow. This causes cherry-pick pain later.
+1. **Ignoring the actual workflow** — Check the branch and working tree first; use repository/user rules before this default model.
+2. **Treating a small feature fix as setup** — Features/fixes still use a branch and PR; standalone setup/docs are the exception.
 3. **Opening PR to main from a feature branch** — Feature branches always target dev.
-4. **Forgetting to create a branch after the user says "let's do X"** — The first action for any new task is `git checkout -b`.
+4. **Skipping classification** — Decide whether the task is feature/fix work or standalone setup/docs before branching.
 5. **Creating a new branch for review fixes** — Stay on the current feature branch. One feature = one branch until merged.

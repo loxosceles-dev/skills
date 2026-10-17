@@ -1,3 +1,9 @@
+## 2026-10-17 — Require a remote-visible commit before claiming a review fix
+
+**Problem:** Commit-before-reply instructions did not require a push, allowing replies to reference work the reviewer could not inspect.
+**Fix:** Require fix → test → commit → authorized push → reply, the actual remote-visible full hash, and explicit blocker reporting when branch policy or authorization prevents publication.
+**Verified:** Static review of ordering, authorization boundaries, generic examples, and valid skill frontmatter. No live PR replies were posted during validation.
+
 ## 2026-08-30 — Added exact gh CLI command for posting replies
 
 **Problem:** "Reply to the comment thread" was too abstract. The agent didn't know the exact `gh api` command to call, burning 3-4 turns guessing before figuring it out.

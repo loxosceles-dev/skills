@@ -161,7 +161,6 @@ Commit on `dev` directly:
 - Project setup, scaffolding
 - Docker/devcontainer configuration
 - Linting, formatting config
-- Small bug fixes (a few lines)
 - Dependency updates
 - Minor config tweaks
 
@@ -171,12 +170,18 @@ Create a feature branch off `dev`:
 - Major refactors
 - Anything spanning multiple logical commits or sessions
 
-Rule of thumb: If the change is a few LOC and self-contained, it goes on `dev`. If it needs its own PR with review context, it gets a branch. When in doubt, ask.
+Classify by purpose, not line count: feature/fix/refactor work uses a branch;
+standalone setup/docs may go directly to dev. Follow repository-specific workflow
+and explicit user restrictions, including authorized main-only infrastructure
+maintenance. Never clean up unrelated work merely to make a branch pushable.
 
 **Branch naming:**
 - Use descriptive, kebab-case names with type prefix: `feat/user-profile`, `fix/auth-timeout`
 - **NEVER reference planning phases**: No `phase-1`, `step-2-3`, etc.
-- Planning docs are not tracked — references are meaningless in git history
+- Where repository policy keeps `docs/planning/` local or in a separate ignored
+  repository, its phase/step references are not durable application history.
+  Other docs, such as ADRs, architecture, and specifications, are normally tracked;
+  inspect the repository policy instead of treating all documentation as local.
 
 **PR titles — plain descriptive (NOT conventional commits):**
 - Describe what the PR does in plain English

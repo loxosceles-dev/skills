@@ -1,6 +1,6 @@
 ---
 name: pr-fixer
-description: Fix PR review comments — triage inline comments, implement each fix, commit, and reply to each thread with the commit hash. Use after a reviewer has left comments on your PR.
+description: Fix PR review comments — triage inline comments, implement each fix, commit and push, then reply to each thread with the pushed commit hash. Use after a reviewer has left comments on your PR.
 type: guideline
 ---
 
@@ -18,6 +18,7 @@ Examples:
 - `[pr-fixer step 1] Triaging all comments — listing each with fix/defer decision`
 - `[pr-fixer step 2] Fixing comment #1234 (path/to/file.ts line 42) — minor rename, trivial risk`
 - `[pr-fixer step 3] Committing fix — following git-commits skill`
+- `[pr-fixer step 3] Pushing authorized fix to the PR branch — verifying the commit is remote-visible`
 - `[pr-fixer step 3] Replying to comment #1234 — using gh api command from Reply format section`
 - `[pr-fixer step 3] Getting comment IDs — running gh api list command`
 
@@ -43,8 +44,10 @@ If you are about to post a new review comment and you have not read `pr-reviewer
 ## Workflow
 
 1. **Triage** — Read all comments first. For each one, decide: fix now, or defer with an issue. Write your decision and one-line rationale on each item. This becomes your working checklist.
-2. **Work one by one** — Pick a comment, fix it, test it, commit it. Then move to the next. Do not batch fixes across comments.
-3. **Reply** — After each fix is committed, reply to that specific comment thread using the `gh api` command in the **Reply format** section below. Use the full 40-character commit hash. Do not move to the next comment until the reply is posted.
+2. **Work one by one** — Pick a comment, fix it, test it, commit it, and push it to the branch the PR points at, within the developer's authorization and repository policy. Do not batch fixes across comments.
+3. **Reply** — After the fix is committed **and pushed**, reply to that specific thread using the **Reply format** below and the actual pushed full 40-character commit hash. Verify the reply before moving to the next comment.
+
+If committing, pushing, or posting is not authorized or is blocked, report the blocker and leave the work at the permitted stage. This workflow does not override branch restrictions or authorize changing the PR branch. Never post a "Fixed" reply for a local-only or planned commit.
 
 ---
 
@@ -102,6 +105,12 @@ The gate:
 ---
 
 ## Reply format
+
+### Remote-visible commit gate
+
+The required order is **fix → test → commit → push → reply**. A local commit has a real hash, but the reviewer cannot inspect it on GitHub until it is pushed to the PR branch. Obtain the hash from the actual commit and verify it is on the remote PR branch before posting. If the branch changed, stop and report the conflict rather than switching branches or pushing elsewhere.
+
+GitHub auto-links a bare full 40-character hash for a remotely visible commit. Use that hash, not a fabricated future hash or a promise to push later. A failed or prohibited push means the "Fixed" reply must wait.
 
 **The exact command to reply to a comment thread:**
 ```bash

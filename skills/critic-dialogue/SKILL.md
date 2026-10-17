@@ -8,6 +8,12 @@ type: pattern
 
 **This is a reference pattern.** Learn from the approach, adapt to your context — don't copy verbatim.
 
+## Model and authorization policy
+
+Use the current harness's default model for every stage unless the user explicitly requests another available model. Stage roles describe responsibilities, not required models; the examples intentionally omit model overrides.
+
+If the requested model is unavailable in the current authorized harness, report the blocker and ask the user how to proceed. A model reference is not permission to acquire credentials, switch providers, invoke another CLI, or incur additional costs. Use only explicitly provisioned capabilities within their approved purpose; discovering a credential does not authorize its use.
+
 ---
 
 ## Problem
@@ -166,7 +172,6 @@ The chunker runs first. Then N parallel critic/dev pairs — one per chunk, each
 stages:
   - name: chunker
     role: lead-dev
-    model: claude-sonnet-4.6
     prompt: |
       [paste chunker.md content]
       path: {document path}
@@ -175,7 +180,6 @@ stages:
   # Repeat this critic/dev-response pair once per chunk (all depend on chunker, all run in parallel).
   - name: critic-{chunk-id}
     role: critic
-    model: claude-opus-4.5
     depends_on: [chunker]
     prompt: |
       [paste critic-lens.md content]
@@ -184,7 +188,6 @@ stages:
 
   - name: dev-response-{chunk-id}
     role: lead-dev
-    model: claude-opus-4.5
     depends_on: [critic-{chunk-id}]
     prompt: |
       [paste dev-respond.md content]
@@ -199,7 +202,6 @@ stages:
   # aggregator depends on ALL dev-response stages
   - name: aggregator
     role: lead-dev
-    model: claude-sonnet-4.6
     depends_on: [dev-response-chunk-0, dev-response-chunk-1, ...]
     prompt: |
       [paste aggregator.md content]
@@ -207,7 +209,6 @@ stages:
 
   - name: final-gate
     role: lead-dev
-    model: claude-opus-4.5
     depends_on: [aggregator]
     prompt: |
       [paste final-gate.md content]
@@ -216,7 +217,6 @@ stages:
   # Only runs on SHIP. On HOLD, address blockers and re-run affected chunks first.
   - name: reviser
     role: lead-dev
-    model: claude-sonnet-4.6
     depends_on: [final-gate]
     prompt: |
       [paste reviser.md content]
@@ -244,7 +244,6 @@ stages:
 stages:
   - name: critic
     role: critic
-    model: claude-opus-4.5
     prompt: |
       [paste critic-lens.md content]
       Document to review: {path}
@@ -252,7 +251,6 @@ stages:
 
   - name: dev-response
     role: lead-dev
-    model: claude-opus-4.5
     depends_on: [critic]
     prompt: |
       [paste dev-respond.md content]
@@ -264,7 +262,6 @@ stages:
 
   - name: arbitrator
     role: lead-dev
-    model: claude-opus-4.5
     depends_on: [dev-response]
     prompt: |
       [paste planner-arbitrate.md content]
@@ -272,7 +269,6 @@ stages:
 
   - name: final-gate
     role: lead-dev
-    model: claude-opus-4.5
     depends_on: [arbitrator]
     prompt: |
       [paste final-gate.md content]
@@ -281,7 +277,6 @@ stages:
   # Only runs on SHIP. On HOLD, address blockers and re-run the loop first.
   - name: reviser
     role: lead-dev
-    model: claude-sonnet-4.6
     depends_on: [final-gate]
     prompt: |
       [paste reviser.md content]
