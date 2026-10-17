@@ -42,6 +42,35 @@ Never run two independent Standards and Spec passes against the same diff. That 
 
 ---
 
+## Validation and findings retention
+
+Validation establishes whether a candidate is a real actionable issue; it does
+not decide whether the developer should be told about a verified issue.
+
+- Retain every verified actionable finding discovered while reviewing the change
+  or necessary surrounding context. Pre-existing code, an unchanged line, lower
+  severity, or deferring the fix does not make a finding disappear. Label its
+  origin, evidence, severity, and disposition so the developer can decide what to
+  fix. Do not turn review into an unrelated whole-repository audit.
+- Verify factual correctness and reachability/material relevance. For standards
+  findings, verify the cited rule applies. A reproducible failing condition is
+  enough; a bug need not fail for every possible input.
+- A disproven or unsupported candidate is not a verified finding. Investigate
+  before making a claim; exclude false positives, unsupported speculation, and
+  tooling-only noise. Do not present a rejected-candidate list or validation
+  discard log as the review result.
+- An existing thread avoids a duplicate post, not visibility: reference that
+  thread in the local findings and state whether it is resolved or outstanding.
+- Post a new finding inline when GitHub provides a valid diff anchor. Otherwise
+  retain it under local `## Findings` with an exact file/line, evidence, and
+  `local — outside diff` or the actual posting blocker. Do not invent an anchor
+  or hide a finding because it cannot be posted inline.
+- The final local report lists every verified actionable finding, including
+  posted, existing-thread, and local-only items. Zero inline comments is not a
+  clean review. Use `No verified actionable findings.` only when that is true.
+
+---
+
 ## Pipeline
 
 ```
@@ -122,10 +151,10 @@ stages:
     model: claude-opus-4-5
     depends_on: [preflight]
     prompt: |
-      You are a bug detector. Focus only on the diff — do not read extra context.
+      You are a bug detector. Start from the diff and read the surrounding context needed to verify a candidate.
       Input: the diff, PR title+body, and existing comments list from preflight.
-      Task: scan for obvious bugs — code that will definitely fail or produce wrong results.
-      High signal only. Do not flag anything you cannot validate from the diff alone.
+      Task: scan for provable bugs and wrong results under reachable conditions.
+      The diff is the entry point; read necessary surrounding context to validate a candidate. Retain verified pre-existing issues encountered there and label their origin.
       Existing comments: behave like a normal reviewer who has read the thread. Add new issues, agree, challenge, or add nuance. Do not re-post the identical point verbatim.
       Output: list of bugs with file:line and explanation. If none, output NONE.
 
@@ -134,10 +163,10 @@ stages:
     model: claude-opus-4-5
     depends_on: [preflight]
     prompt: |
-      You are a logic and security reviewer. Focus only on the changed code.
+      You are a logic and security reviewer. Start with the changed code and inspect necessary surrounding context.
       Input: the diff, PR title+body, and existing comments list from preflight.
-      Task: find logic errors, security issues, and incorrect behavior introduced in this PR.
-      High signal only. Flag only what you can prove from the diff.
+      Task: find provable logic errors, security issues, and incorrect behavior relevant to the review. Retain verified pre-existing issues encountered along the way, labelled separately from introduced issues.
+      High signal only. Cite evidence and reachable conditions; do not speculate.
       Existing comments: behave like a normal reviewer who has read the thread. Add new issues, agree, challenge, or add nuance. Do not re-post the identical point verbatim.
       Output: list of issues with file:line and explanation. If none, output NONE.
 
@@ -149,33 +178,33 @@ stages:
       You are a validation agent. You receive all findings from the review stages that actually ran.
       In standalone mode that is standards, spec, bug-detector, and logic-security.
       When composed under `code-reviewer`, Standards and Spec findings may come from the `code-review` skill instead of this skill's own `standards` and `spec` stages.
-      For each issue, confirm ALL of the following — drop the issue if any fail:
-        1. The issue is in introduced code, not pre-existing
-        2. The flagged code is actually reachable
-        3. The guideline cited applies to this file's path (standards issues only)
-        4. A senior engineer would actually raise this
+      Apply the "Validation and findings retention" policy above to every candidate:
+        1. Verify the factual claim and reachable failing condition or material relevance.
+        2. Verify the guideline applies to the file's path (standards issues only).
+        3. Keep every verified actionable issue, labelled introduced or pre-existing.
+        4. Reference existing threads instead of posting identical comments again.
 
       Use Opus reasoning for bugs/logic issues. Use Sonnet reasoning for guideline violations.
 
-      For each issue output exactly one of:
-        PASS: <issue summary> — <file:line>
-        DROP: <issue summary> — reason: <why dropped>
+      Output confirmed findings only:
+        CONFIRMED: <issue summary> — <file:line> — <introduced/pre-existing> — <new/existing thread> — <evidence>
 
-      Do not output anything else. No posting. No inline comments. Just PASS/DROP per issue.
+      Exclude disproven or unsupported candidates; do not emit a rejected-candidate report.
+      Do not post comments in this stage.
 
   - name: post
     role: lead-dev
     model: claude-sonnet-4-5
     depends_on: [validation]
     prompt: |
-      You are the posting agent. You receive the validated issues (PASS lines only from validation).
+      You are the posting agent. You receive confirmed findings from validation.
 
-      For each PASS issue, assign one stance:
+      For each confirmed issue, assign one stance:
         MUST FIX — blocks approval, real issue, clear problem
         CONSIDER — valid concern, not a blocker, defer to dev
         PUSHBACK — post as a question, not a demand
 
-      Post one inline comment per issue using:
+      Post one inline comment per new issue with a valid PR-diff anchor using:
         gh api repos/<owner>/<repo>/pulls/<PR_NUMBER>/comments \
           -f body="<comment>" \
           -f commit_id="<full-40-char-sha>" \
@@ -189,7 +218,9 @@ stages:
       Full SHA always — never abbreviated, never shell-interpolated.
 
       Do not post a separate summary comment. The inline comments are the review.
-      If no PASS issues: post one comment on the PR saying "No new issues found."
+      If a verified finding is outside the diff, reference it in local Findings with exact file/line and evidence. Reference existing threads rather than duplicating them. If posting fails, retain the finding locally with the actual blocker.
+      Present every verified actionable finding locally with its origin, stance, and posted/existing-thread/local status. No inline comments does not mean no issues.
+      Only if there are no verified actionable findings or outstanding issues to report, post one PR comment saying "No new issues found." Do not output a rejected-candidate section or discard log.
 
       Never fix code. Never commit. Never create branches. Never approve while MUST FIX items are unresolved.
 ```
@@ -226,16 +257,15 @@ If you skip this line you are not following this skill. The developer uses these
 
 ## High Signal Only
 
-False positives erode trust. Drop anything that does not meet this bar:
+False positives erode trust. Verify candidates against evidence before reporting them:
 
 Flag only:
 - Code that will definitely fail to compile or parse
-- Code that will definitely produce wrong results regardless of input
+- Code that demonstrably produces wrong results under reachable conditions
 - Clear, unambiguous guideline violations you can quote exactly
-- Security issues introduced in this PR
+- Provable security issues relevant to the review, labelled introduced or pre-existing
 
 Never flag:
-- Pre-existing issues not in this diff
 - Something that looks like a bug but might be correct
 - Nitpicks a senior engineer would not raise
 - Issues a linter already catches
@@ -268,7 +298,7 @@ When the dev pushes and asks for re-review:
 - Never post a comment that restates verbatim what another reviewer already said
 - Never post a detached summary comment — comments belong on the code they're about
 - Never approve while MUST FIX items are unresolved
-- Never flag the same pre-existing issue twice
+- Reference an already-reported issue's existing thread instead of duplicating its post; keep outstanding findings visible locally
 
 ---
 

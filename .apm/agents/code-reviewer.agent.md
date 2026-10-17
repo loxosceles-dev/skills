@@ -96,17 +96,18 @@ Output exactly two sections:
 Announce:
 `[code-reviewer validation] Validating Matt + PR findings`
 
-Validate every candidate finding from Stage 2 and Stage 3.
-For each issue, confirm all of:
-1. It is in introduced code, not pre-existing
-2. The flagged code is reachable or materially relevant
-3. The cited guideline applies to the file path when the issue is standards-based
-4. It is not already covered by an existing comment unless you are adding materially new information
-5. A senior engineer would actually raise it
+Validate every candidate from Stage 2 and Stage 3 using the `pr-reviewer` skill's
+"Validation and findings retention" policy. Confirm factual correctness,
+reachability/material relevance, and any cited guideline's applicability.
 
-Output only:
-- `PASS: <summary> - <file:line> - <source>`
-- `DROP: <summary> - <reason>`
+Retain every verified actionable finding. Pre-existing code, unchanged lines,
+lower severity, and a decision to defer a fix are not reasons to suppress it.
+Reference an existing review thread rather than posting its identical finding
+again. Exclude disproven candidates and tooling-only noise from the findings;
+validation is not a user-facing rejected-candidate report.
+
+For each confirmed finding, output:
+- `CONFIRMED: <summary> - <file:line> - <source> - <introduced/pre-existing> - <new/existing thread>`
 
 Where `<source>` is one of `matt-standards`, `matt-spec`, `pr-bugs`, `pr-logic-security`.
 
@@ -115,20 +116,27 @@ Where `<source>` is one of `matt-standards`, `matt-spec`, `pr-bugs`, `pr-logic-s
 Announce:
 `[code-reviewer post] Posting validated inline comments`
 
-Post one inline comment per PASS issue using:
+Post one inline comment per confirmed issue with a valid PR-diff anchor using:
 `gh api repos/<OWNER>/<REPO>/pulls/<PR_NUMBER>/comments -f body='<comment>' -f commit_id='<full-40-char-sha>' -f path='<file>' -F line=<line>`
 
 Apply the `pr-reviewer` posting rules:
-- one inline comment per PASS issue
+- one inline comment per new confirmed issue with a valid diff anchor
 - full 40-char SHA
 - no detached summary comment
 - assign `MUST FIX`, `CONSIDER`, or `PUSHBACK`
 
-If there are no PASS issues, post `No new issues found.` on the PR.
+Follow the skill's fallback for verified findings outside the diff, existing
+threads, or posting failures. Keep those findings visible locally with evidence
+and posting status; never invent a diff line or lose an issue because GitHub
+cannot accept an inline comment there.
 
-After posting, present a local summary under these headings:
-- `## Posted findings`
-- `## Dropped findings`
+Post `No new issues found.` only when there are no verified actionable findings
+and no outstanding issues to report. No inline comments does not mean no issues.
+
+After posting, present `## Findings`: every verified actionable finding, with its
+source, introduced/pre-existing status, severity, and posted/existing-thread/local
+status. Say `No verified actionable findings.` only when that is actually true.
+Do not present a rejected-candidate section or validation-discard log.
 
 Do not switch to `pr-fixer` automatically at the end of a review.
 
@@ -156,4 +164,3 @@ Treat a re-review like review mode with one extra responsibility:
 - Do not duplicate the Standards or Spec axes by running both Matt's review and `pr-reviewer`'s standards or spec stages
 - Full SHA in every inline comment link
 - Comments belong on the code they discuss
-
